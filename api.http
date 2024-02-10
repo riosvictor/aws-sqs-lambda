@@ -1,0 +1,10 @@
+### overview localhost
+GET http://localhost:4566/health
+
+### publish a message
+POST http://localhost:3000/producer
+Content-Type: application/json
+
+{
+  "email": "paulo.rios@grupoboticario.com.br"
+}

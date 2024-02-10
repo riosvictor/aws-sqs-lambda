@@ -1,55 +1,50 @@
 service: sls-sqs-ts-example
-frameworkVersion: '3'
+frameworkVersion: "3"
 useDotenv: true
 
 provider:
   name: aws
-  runtime: nodejs16.x
-  region: eu-west-1
+  runtime: nodejs20.x
+  region: us-east-1
+  httpApi:
+    cors: true
   environment:
-    FIFO_QUEUE_ARN: ${self:custom.queueARN}
-    SQS_OFFLINE_ENDPOINT: ${self:custom.serverless-offline-sqs.endpoint}
+    QUEUE_URL: ${self:custom.queueUrl}
     AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    AWS_SESSION_TOKEN: ${env:AWS_SESSION_TOKEN}
+    AWS_REGION: ${aws:region}
 
 functions:
-  publisher:
-    handler: ./src/publisher.handler
+  producer:
+    handler: ./src/producer.handler
     events:
       - httpApi:
-          path: /produce-message
+          path: /producer
           method: post
   consumer:
     handler: ./src/consumer.handler
     events:
-      - sqs: ${self:custom.queueARN}
-
-resources:
-  Resources:
-    myQueue:
-      Type: 'AWS::SQS::Queue'
-      Properties:
-        QueueName: ${self:service}-${sls:stage}-queue
-        ContentBasedDeduplication: false
-        FifoQueue: true
+      - sqs:
+          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_NAME}
 
 custom:
-  serverless-offline:
-    httpPort: 8080
   esbuild:
     minify: false
     sourcemap: linked
     watch:
-      pattern: 'src/**/*.ts'
-      ignore: 'node_modules/**/*'
+      pattern: "src/**/*.ts"
+      ignore: "node_modules/**/*"
   serverless-offline-sqs:
     autoCreate: true
-    apiVersion: '2012-11-05'
-    endpoint: http://0.0.0.0:9324
+    apiVersion: '2024-01-10'
+    endpoint: ${env:QUEUE_HOST_URL}
     region: ${self:provider.region}
-    accessKeyId: root
-    secretAccessKey: root
+    accessKeyId: ${env:AWS_ACCESS_KEY_ID}
+    secretAccessKey: ${env:AWS_SECRET_ACCESS_KEY}
     skipCacheInvalidation: false
-  queueARN: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:myqueue
+  queueUrl: ${env:QUEUE_HOST_URL}/${env:AWS_ACCOUNT_ID}/${env:QUEUE_NAME}
 
 plugins:
   - serverless-dotenv-plugin
