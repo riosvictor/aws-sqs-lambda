@@ -9,7 +9,7 @@
 
 ### Configurando o ambiente
 * Para iniciar o serviço de filas: `podman-compose up -d`
-* Para iniciar a aplicação: `npm run start`
+* Para iniciar a aplicação: `npm start`
 * Para ver as filas:
   - Pode utilizar o [Localstack Desktop](https://docs.localstack.cloud/user-guide/tools/localstack-desktop/)
   - Ou o [Local Stack Web Application](https://docs.localstack.cloud/user-guide/web-application/) 
@@ -31,4 +31,4 @@
   - podman exec -it <container-id> /bin/bash (para acessar o container)
   - awslocal sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/minha-fila --attribute-names QueueArn
 
-* COnfigure o arquivo .env
+* Configure o arquivo .env
