@@ -32,3 +32,27 @@
   - awslocal sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/minha-fila --attribute-names QueueArn
 
 * Configure o arquivo .env
+
+### Configurando o Localstack
+
+```bash
+# criando as filas
+# Essa fila é criada automaticamente: awslocal sqs create-queue --queue-name input-queue 
+# Essa fila é criada automaticamente: awslocal sqs create-queue --queue-name input-queue-dlq 
+awslocal sqs create-queue --queue-name input-queue-dlq-dlq 
+```
+
+```bash
+# configurando as dead letter queues
+awslocal sqs set-queue-attributes \
+--queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/input-queue \
+--attributes '{
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:input-queue-dlq\",\"maxReceiveCount\":\"3\",\"DelaySeconds\":\"60\"}"
+}'
+
+awslocal sqs set-queue-attributes \
+--queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/input-queue-dlq \
+--attributes '{
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:input-queue-dlq-dlq\",\"maxReceiveCount\":\"3\",\"DelaySeconds\":\"60\"}"
+}'
+```
