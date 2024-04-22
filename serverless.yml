@@ -28,6 +28,17 @@ functions:
     events:
       - sqs:
           arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_NAME}
+          batchSize: 1
+          maximumBatchingWindow: 30
+          functionResponseType: ReportBatchItemFailures
+  consumer-dlq:
+    handler: ./src/consumer-dlq.handler
+    events:
+      - sqs:
+          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_NAME_DLQ}
+          batchSize: 1
+          maximumBatchingWindow: 30
+          functionResponseType: ReportBatchItemFailures
 
 custom:
   esbuild:
