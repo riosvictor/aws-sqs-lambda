@@ -12,41 +12,37 @@ const queueUrl = process.env.QUEUE_URL ?? ''
 
 export const handler: SQSHandler = async (event: SQSEvent, context: Context): Promise<void> => {
   console.log('Messages received in [Consumer DLQ] at ', new Date().toISOString());
-  console.log('Max attempts: ', process.env.MAX_ATTEMPTS);
-  console.log('Delay Base: ', process.env.DELAY_BASE);
-
-  const MAX_ATTEMPTS = parseInt(process.env.MAX_ATTEMPTS ?? '3');
   
   for (const record of event.Records) {
-    const messageBody = JSON.parse(record.body);
-    const queueName = record.eventSourceARN.split(':').pop() ?? '';
-    let attempts = 0;
-    
-    console.log(`[CONSUMER] at: ${queueName} | message: ${JSON.stringify(messageBody)}`);
-    
-    if (record.messageAttributes && record.messageAttributes.attempts) {
-      attempts = parseInt(record.messageAttributes.attempts.stringValue!);
-    }
+    const body = JSON.parse(record.body)
+    const maxAttempts = parseInt(process.env.MAX_ATTEMPTS ?? '3')
+    const base = parseInt(process.env.DELAY_BASE ?? '100')
+    const delayMax = 900 // 15 minutes delay max of AWS SQS
+    const queueName = record.eventSourceARN.split(':').pop()
+    const attempt =
+      (record.messageAttributes?.attempts 
+        ? parseInt(record.messageAttributes.attempts.stringValue!) 
+        : 0
+      ) + 1
 
-    console.log('Number of retries already done: ', attempts);
-    attempts++;
+    console.debug(`[${queueName}] Processing message in attempt [${attempt}] from [${maxAttempts}]`)
 
-    if (attempts > MAX_ATTEMPTS) {
-      throw new MaxAttemptsError(attempts, MAX_ATTEMPTS);
+    if (attempt > maxAttempts) {
+      throw new MaxAttemptsError(attempt, maxAttempts);
     }
 
     const attributes = (record.messageAttributes ?? {}) as unknown as Record<string, MessageAttributeValue>;
     attributes.attempts = {
       DataType: 'Number',
-      StringValue: attempts.toString()
+      StringValue: attempt.toString()
     };
 
-    const delaySeconds = getDelaySeconds(attempts);
+    const delaySeconds = getDelaySeconds(attempt, base, delayMax);
 
     console.info(`Message replayed to main SQS queue with delay seconds ${delaySeconds}`);
 
     const command = new SendMessageCommand({
-      MessageBody: JSON.stringify(messageBody),
+      MessageBody: JSON.stringify(body),
       QueueUrl: queueUrl,
       MessageAttributes: attributes,
       DelaySeconds: delaySeconds

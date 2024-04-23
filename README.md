@@ -47,12 +47,16 @@ awslocal sqs create-queue --queue-name input-queue-dlq-dlq
 awslocal sqs set-queue-attributes \
 --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/input-queue \
 --attributes '{
-    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:input-queue-dlq\",\"maxReceiveCount\":\"3\",\"DelaySeconds\":\"60\"}"
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:input-queue-dlq\",\"maxReceiveCount\":\"3\"}",
+    "DelaySeconds":"90"
 }'
 
 awslocal sqs set-queue-attributes \
 --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/input-queue-dlq \
 --attributes '{
-    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:input-queue-dlq-dlq\",\"maxReceiveCount\":\"3\",\"DelaySeconds\":\"60\"}"
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:input-queue-dlq-dlq\"}",
+    "DelaySeconds":"60"
 }'
 ```
+
+awslocal sqs send-message --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/input-queue --message-body "Hello World 1" --delay-seconds 60

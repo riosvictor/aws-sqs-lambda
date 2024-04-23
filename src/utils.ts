@@ -11,12 +11,9 @@ export const getOfflineSqsQueueUrl = (sqsQueueUrl: string) => {
   return `${process.env.SQS_OFFLINE_ENDPOINT}${url.pathname}`;
 };
 
-export const getDelaySeconds = (attempt: number) => {
-  const base = parseInt(process.env.DELAY_BASE ?? '1');
-  const delayMax = parseInt(process.env.DELAY_MAX ?? '900');
-  const limit = delayMax > 900 ? 900 : delayMax;
-  const backoffStrategy = new Backoff(base, limit);
-  const delaySeconds = backoffStrategy.calculateExponentialDelay(attempt);
+export const getDelaySeconds = (attempt: number, base: number, delayMax: number) => {
+  const limit = delayMax > 900 ? 900 : delayMax
+  const exponentialDelay = Math.min(limit, Math.pow(2, attempt) * base)
 
-  return delaySeconds;
+  return exponentialDelay
 }
