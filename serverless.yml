@@ -17,17 +17,7 @@ provider:
     AWS_REGION: ${aws:region}
 
 functions:
-  producer:
-    handler: ./src/producer.handler
-    events:
-      - httpApi:
-          path: /producer
-          method: post
-  consumer:
-    handler: ./src/consumer.handler
-    events:
-      - sqs:
-          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_NAME}
+  ${file(./functions.yml)}
 
 custom:
   esbuild:
