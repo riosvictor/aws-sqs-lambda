@@ -1,4 +1,4 @@
-service: sls-sqs-ts-example
+service: sls-sns-ts-example
 frameworkVersion: "3"
 useDotenv: true
 
@@ -8,7 +8,10 @@ provider:
   region: us-east-1
   httpApi:
     cors: true
+  logs:
+    lambda: true
   environment:
+    TOPIC_ARN: ${self:custom.topicArn}
     QUEUE_URL: ${self:custom.queueUrl}
     AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
     AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
@@ -26,6 +29,12 @@ custom:
     watch:
       pattern: "src/**/*.ts"
       ignore: "node_modules/**/*"
+  serverless-offline-sns:
+    host: 0.0.0.0 # Enable plugin to listen on every local address
+    sns-subscribe-endpoint: ${env:LOCAL_HOST_IP} #Host ip address
+    sns-endpoint: ${env:SNS_ENDPOINT} # Default localstack sns endpoint
+    debug: true
+  topicArn: arn:aws:sns:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:TOPIC_NAME}
   serverless-offline-sqs:
     autoCreate: true
     apiVersion: '2024-01-10'
@@ -41,3 +50,4 @@ plugins:
   - serverless-esbuild
   - serverless-offline-sqs
   - serverless-offline
+  - serverless-offline-sns

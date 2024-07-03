@@ -32,3 +32,40 @@
   - awslocal sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/minha-fila --attribute-names QueueArn
 
 * Configure o arquivo .env
+
+
+### Configuração do tópico
+* criando o tópico
+```bash
+awslocal sns create-topic --name meu-topico
+```
+
+* alterando atributos do tópico
+```bash
+ awslocal sns set-topic-attributes \
+   --topic-arn arn:aws:sns:us-east-1:000000000000:meu-topico \
+   --attribute-name DisplayName \
+   --attribute-value MeuTopico
+```
+
+* obtendo os atributos do tópico
+```bash
+ awslocal sns get-topic-attributes \
+   --topic-arn arn:aws:sns:us-east-1:000000000000:meu-topico
+```
+
+* adicionando um subscriber ao tópico, com protocolo sqs, e a arn da fila de destino
+```bash
+ awslocal sns subscribe \
+   --topic-arn arn:aws:sns:us-east-1:000000000000:meu-topico \
+   --protocol sqs \
+   --notification-endpoint "arn:aws:sqs:us-east-1:000000000000:minha-fila"
+```
+
+* adicionando um subscriber ao tópico, com protocolo sqs, e a arn da segunda fila de destino
+```bash
+ awslocal sns subscribe \
+   --topic-arn arn:aws:sns:us-east-1:000000000000:meu-topico \
+   --protocol sqs \
+   --notification-endpoint "arn:aws:sqs:us-east-1:000000000000:minha-fila-2"
+```

@@ -1,23 +1,23 @@
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import { APIGatewayProxyHandler, APIGatewayEvent, ProxyResult } from 'aws-lambda';
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent): Promise<ProxyResult> => {
-  const client = new SQSClient({
-    endpoint: process.env.QUEUE_HOST_URL,
-    region: process.env.AWS_REGION
+  const client = new SNSClient({
+    endpoint: process.env.SNS_ENDPOINT,
+    region: process.env.AWS_REGION,
   });
 
-  const queueUrl = process.env.QUEUE_URL ?? ''
-  const body = JSON.parse(event.body ?? '{}')
+  const topicArn = process.env.TOPIC_ARN ?? '';
+  const body = JSON.parse(event.body ?? '{}');
 
-  const command = new SendMessageCommand({
-    MessageBody: JSON.stringify(body),
-    QueueUrl: queueUrl,
+  const command = new PublishCommand({
+    Message: JSON.stringify(body),
+    TopicArn: topicArn,
   });
   
   try {
     const data = await client.send(command);
-    
+
     return {
       statusCode: 200,
       body: JSON.stringify({ 
@@ -29,7 +29,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent): P
     return {
       statusCode: 500,
       body: JSON.stringify({
-        message: 'Error sending message to SQS',
+        message: 'Error sending message to SNS',
         error: JSON.stringify(err),
       }),
     };
