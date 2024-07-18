@@ -1,5 +1,3 @@
-import { Backoff } from './backoff.class';
-
 export const generateSQSQueueUrlFromArn = (arn: string | undefined): string => {
   if (!arn) return '';
   const [_, __, ___, region, accountId, queueName] = arn.split(':');

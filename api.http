@@ -1,11 +1,15 @@
 ### overview localhost
 GET http://localhost:4566/health
 
-### publish a message
-POST http://localhost:3000/producer
+### get table
+GET http://localhost:3000/tables?tableName=sdk
+Content-Type: application/json
+
+### insert item on table
+POST http://localhost:3000/tables?tableName=sdksTable
 Content-Type: application/json
 
 {
-  "email": "paulo.rios@grupoboticario.com.br",
-  "order": 1
+    "key": "test2",
+    "payload": "{}"
 }
