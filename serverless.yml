@@ -6,8 +6,6 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: us-east-1
-  httpApi:
-    cors: true
   environment:
     AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
     AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
@@ -16,18 +14,13 @@ provider:
     AWS_REGION: ${aws:region}
 
 functions:
-  tables:
-    handler: ./src/tables.get
+  s3TriggerFunction:
+    handler: src/handler.execute
     events:
-      - httpApi:
-          path: /tables
-          method: get
-  insertTable:
-    handler: ./src/tables.postItem
-    events:
-      - httpApi:
-          path: /tables
-          method: post
+      - s3:
+          bucket: ${env:BUCKET_NAME}
+          event: s3:ObjectCreated:Put
+          existing: true
 
 custom:
   esbuild:
@@ -36,8 +29,11 @@ custom:
     watch:
       pattern: "src/**/*.ts"
       ignore: "node_modules/**/*"
+  s3:
+    directory: ./buckets
 
 plugins:
   - serverless-dotenv-plugin
   - serverless-esbuild
+  - serverless-s3-local
   - serverless-offline

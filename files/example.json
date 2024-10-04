@@ -1,0 +1,98 @@
+[
+  {
+    "name": "configuration",
+    "schema_name": "public",
+    "description": "",
+    "database_name": "slackalm",
+    "columns": [
+      {
+        "name": "config",
+        "type": "json",
+        "description": "",
+        "is_primary_key": false,
+        "is_unique": false,
+        "is_nullable": false
+      },
+      {
+        "name": "channelid",
+        "type": "character varying",
+        "description": "",
+        "is_primary_key": true,
+        "is_unique": false,
+        "is_nullable": false
+      }
+    ]
+  },
+  {
+    "name": "issues",
+    "schema_name": "public",
+    "description": "tabela issue",
+    "database_name": "slackalm",
+    "columns": [
+      {
+        "name": "channel",
+        "type": "character varying",
+        "description": "",
+        "is_primary_key": true,
+        "is_unique": false,
+        "is_nullable": false
+      },
+      {
+        "name": "threadid",
+        "type": "character varying",
+        "description": "",
+        "is_primary_key": true,
+        "is_unique": false,
+        "is_nullable": false
+      },
+      {
+        "name": "issueid",
+        "type": "character varying",
+        "description": "",
+        "is_primary_key": false,
+        "is_unique": false,
+        "is_nullable": true
+      },
+      {
+        "name": "owners",
+        "type": "ARRAY",
+        "description": "",
+        "is_primary_key": false,
+        "is_unique": false,
+        "is_nullable": false
+      },
+      {
+        "name": "nextchecktime",
+        "type": "timestamp with time zone",
+        "description": "",
+        "is_primary_key": false,
+        "is_unique": false,
+        "is_nullable": true
+      },
+      {
+        "name": "sleeping_thread_count",
+        "type": "integer",
+        "description": "",
+        "is_primary_key": false,
+        "is_unique": false,
+        "is_nullable": false
+      },
+      {
+        "name": "eventtime",
+        "type": "timestamp with time zone",
+        "description": "",
+        "is_primary_key": false,
+        "is_unique": false,
+        "is_nullable": false
+      },
+      {
+        "name": "active",
+        "type": "boolean",
+        "description": "",
+        "is_primary_key": false,
+        "is_unique": false,
+        "is_nullable": false
+      }
+    ]
+  }
+]
