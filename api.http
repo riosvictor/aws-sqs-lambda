@@ -1,5 +1,5 @@
 ### overview localhost
-GET http://localhost:4566/health
+GET http://localhost:4566/_localstack/health
 
 ### publish a message
 POST http://localhost:3000/producer
