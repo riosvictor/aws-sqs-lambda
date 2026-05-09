@@ -4,25 +4,27 @@
   "author": "",
   "version": "0.1.0",
   "scripts": {
-    "start": "sls offline start"
+    "start": "sls offline start",
+    "test": "node --require ts-node/register --test src/__tests__/*.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-sns": "^3.606.0",
+    "@aws-sdk/client-sns": "^3.620.0",
     "aws-lambda": "^1.0.7",
-    "axios": "^1.6.2"
+    "axios": "^1.7.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.130",
-    "@types/node": "^20.10.4",
-    "esbuild": "^0.19.9",
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20.17.0",
+    "esbuild": "^0.24.0",
     "serverless": "^3.38.0",
     "serverless-dotenv-plugin": "^6.0.0",
-    "serverless-esbuild": "^1.50.0",
-    "serverless-offline": "^13.3.1",
+    "serverless-esbuild": "^1.52.0",
+    "serverless-offline": "^13.9.0",
     "serverless-offline-sns": "^0.78.0",
     "serverless-offline-sqs": "^8.0.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.7.0"
   }
 }
