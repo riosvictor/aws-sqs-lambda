@@ -1,11 +1,41 @@
-### overview localhost
-GET http://localhost:4566/health
+### overview localstack
+GET http://localhost:4566/_localstack/health
 
-### publish a message
+### publish happy-path event
 POST http://localhost:3000/producer
 Content-Type: application/json
 
 {
+  "transactionId": "tx-happy-001",
   "email": "paulo.rios@grupoboticario.com.br",
   "order": 1
+}
+
+### publish duplicate event (same transactionId)
+POST http://localhost:3000/producer
+Content-Type: application/json
+
+{
+  "transactionId": "tx-happy-001",
+  "email": "paulo.rios@grupoboticario.com.br",
+  "order": 2
+}
+
+### publish transient failure event (retry expected)
+POST http://localhost:3000/producer
+Content-Type: application/json
+
+{
+  "transactionId": "tx-transient-001",
+  "email": "retry@example.com",
+  "forceTransientError": true
+}
+
+### publish permanent failure event (send to final DLQ)
+POST http://localhost:3000/producer
+Content-Type: application/json
+
+{
+  "transactionId": "tx-permanent-001",
+  "invalid": true
 }

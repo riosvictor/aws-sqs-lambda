@@ -9,12 +9,19 @@ provider:
   httpApi:
     cors: true
   environment:
-    QUEUE_URL: ${self:custom.queueUrl}
+    SNS_TOPIC_ARN: ${self:custom.topicArn}
+    QUEUE_LOG_URL: ${self:custom.queueLogUrl}
+    QUEUE_RESILIENT_URL: ${self:custom.queueResilientUrl}
+    FINAL_ERROR_QUEUE_URL: ${self:custom.queueResilientFinalDlqUrl}
+    IDEMPOTENCY_TABLE_NAME: ${self:custom.idempotencyTableName}
     AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
     AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     AWS_SESSION_TOKEN: ${env:AWS_SESSION_TOKEN}
     AWS_REGION: ${aws:region}
+    QUEUE_HOST_URL: ${env:QUEUE_HOST_URL}
+    SNS_ENDPOINT_URL: ${env:QUEUE_HOST_URL}
+    DYNAMODB_ENDPOINT_URL: ${env:QUEUE_HOST_URL}
 
 functions:
   producer:
@@ -23,21 +30,21 @@ functions:
       - httpApi:
           path: /producer
           method: post
-  consumer:
-    handler: ./src/consumer.handler
+  consumerLog:
+    handler: ./src/consumer-log.handler
     events:
       - sqs:
-          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_NAME}
-          batchSize: 1
-          maximumBatchingWindow: 30
+          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_LOG_NAME}
+          batchSize: 10
+          maximumBatchingWindow: 5
           functionResponseType: ReportBatchItemFailures
-  consumer-dlq:
-    handler: ./src/consumer-dlq.handler
+  consumerResilient:
+    handler: ./src/consumer-resilient.handler
     events:
       - sqs:
-          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_NAME_DLQ}
+          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_RESILIENT_NAME}
           batchSize: 1
-          maximumBatchingWindow: 30
+          maximumBatchingWindow: 5
           functionResponseType: ReportBatchItemFailures
 
 custom:
@@ -48,17 +55,21 @@ custom:
       pattern: "src/**/*.ts"
       ignore: "node_modules/**/*"
   serverless-offline-sqs:
-    autoCreate: true
+    autoCreate: false
     apiVersion: '2024-01-10'
     endpoint: ${env:QUEUE_HOST_URL}
     region: ${self:provider.region}
     accessKeyId: ${env:AWS_ACCESS_KEY_ID}
     secretAccessKey: ${env:AWS_SECRET_ACCESS_KEY}
     skipCacheInvalidation: false
-  queueUrl: ${env:QUEUE_HOST_URL}/${env:AWS_ACCOUNT_ID}/${env:QUEUE_NAME}
+  topicArn: arn:aws:sns:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:SNS_TOPIC_NAME}
+  queueLogUrl: ${env:QUEUE_HOST_URL}/${env:AWS_ACCOUNT_ID}/${env:QUEUE_LOG_NAME}
+  queueResilientUrl: ${env:QUEUE_HOST_URL}/${env:AWS_ACCOUNT_ID}/${env:QUEUE_RESILIENT_NAME}
+  queueResilientFinalDlqUrl: ${env:QUEUE_HOST_URL}/${env:AWS_ACCOUNT_ID}/${env:QUEUE_RESILIENT_FINAL_DLQ_NAME}
+  idempotencyTableName: ${env:IDEMPOTENCY_TABLE_NAME}
 
 plugins:
   - serverless-dotenv-plugin
   - serverless-esbuild
   - serverless-offline-sqs
-  - serverless-offline
+  - ./plugins/serverless-offline.cjs
