@@ -9,7 +9,6 @@ provider:
   httpApi:
     cors: true
   environment:
-    QUEUE_URL: ${self:custom.queueUrl}
     AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
     AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
@@ -17,28 +16,23 @@ provider:
     AWS_REGION: ${aws:region}
 
 functions:
-  producer:
-    handler: ./src/producer.handler
+  scheduled-jobs:
+    handler: ./src/scheduled-handler.handler
     events:
-      - httpApi:
-          path: /producer
-          method: post
-  consumer:
-    handler: ./src/consumer.handler
-    events:
-      - sqs:
-          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_NAME}
-          batchSize: 1
-          maximumBatchingWindow: 30
-          functionResponseType: ReportBatchItemFailures
-  consumer-dlq:
-    handler: ./src/consumer-dlq.handler
-    events:
-      - sqs:
-          arn: arn:aws:sqs:${aws:region}:${env:AWS_ACCOUNT_ID}:${env:QUEUE_NAME_DLQ}
-          batchSize: 1
-          maximumBatchingWindow: 30
-          functionResponseType: ReportBatchItemFailures
+      - schedule:
+          name: monthly-job-schedule
+          description: 'Executa job mensal no último dia do mês às 18h (São Paulo)'
+          rate: cron(21 18 L * ? *)
+          timezone: America/Sao_Paulo
+          input:
+            jobType: monthly
+      - schedule:
+          name: weekly-job-schedule
+          description: 'Executa job semanal toda sexta-feira às 18h (São Paulo)'
+          rate: cron(21 18 ? * THU *)
+          timezone: America/Sao_Paulo
+          input:
+            jobType: weekly
 
 custom:
   esbuild:
@@ -47,18 +41,8 @@ custom:
     watch:
       pattern: "src/**/*.ts"
       ignore: "node_modules/**/*"
-  serverless-offline-sqs:
-    autoCreate: true
-    apiVersion: '2024-01-10'
-    endpoint: ${env:QUEUE_HOST_URL}
-    region: ${self:provider.region}
-    accessKeyId: ${env:AWS_ACCESS_KEY_ID}
-    secretAccessKey: ${env:AWS_SECRET_ACCESS_KEY}
-    skipCacheInvalidation: false
-  queueUrl: ${env:QUEUE_HOST_URL}/${env:AWS_ACCOUNT_ID}/${env:QUEUE_NAME}
 
 plugins:
   - serverless-dotenv-plugin
   - serverless-esbuild
-  - serverless-offline-sqs
   - serverless-offline
