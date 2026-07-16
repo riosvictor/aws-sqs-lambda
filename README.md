@@ -1,8 +1,13 @@
-# POC: SQS + DLQ com Retry Exponencial (Serverless Framework + LocalStack)
+# POC: SQS + DLQ com Retry Exponencial + Lambda Scheduled Jobs (Serverless Framework + LocalStack)
 
 ## Visão Geral
 
-Esta POC demonstra uma arquitetura de retry com backoff exponencial usando AWS SQS e Dead Letter Queue (DLQ), rodando localmente com LocalStack e Serverless Framework. O fluxo valida o comportamento de reprocessamento automático de mensagens com falha, limitado por um número máximo de tentativas.
+Esta POC demonstra:
+
+1. **Arquitetura de retry com backoff exponencial** usando AWS SQS e Dead Letter Queue (DLQ)
+2. **Lambda com duplo schedule** (mensal e semanal) usando EventBridge Scheduler com lógica de prevenção de colisão
+
+Ambos os cenários rodam localmente com LocalStack e Serverless Framework.
 
 ## Arquitetura e Fluxo
 
@@ -185,3 +190,99 @@ Use o arquivo [api.http](./api.http) com a extensão **REST Client** do VS Code.
 
 - [LocalStack Desktop](https://docs.localstack.cloud/user-guide/tools/localstack-desktop/)
 - [LocalStack Web Application](https://docs.localstack.cloud/user-guide/web-application/)
+
+---
+
+## 📅 Lambda com Duplo Schedule (Mensal/Semanal)
+
+### Visão Geral
+
+Lambda TypeScript disparada por **dois schedules** no EventBridge Scheduler:
+- **Mensal**: Último dia do mês às 18h (timezone São Paulo)
+- **Semanal**: Toda sexta-feira às 18h (timezone São Paulo)
+
+**Regra de Colisão**: Se o disparo semanal cair no último dia do mês, a execução semanal é **automaticamente pulada** para evitar duplicação.
+
+### Arquitetura
+
+```
+EventBridge Scheduler (monthly)
+  cron: 0 18 L * ? *
+  payload: {jobType: "monthly"}
+              │
+              ├──► Lambda Handler (scheduled-handler.ts)
+              │       ├─ Verifica timezone São Paulo
+              │       ├─ Checa se é último dia do mês
+              │       └─ Roteia para job correto
+              │
+EventBridge Scheduler (weekly)
+  cron: 0 18 ? * FRI *
+  payload: {jobType: "weekly"}
+```
+
+### Estrutura de Arquivos
+
+```
+src/
+├── scheduled-handler.ts        # Handler principal com roteamento
+├── date-utils.ts               # Helper para verificar último dia do mês
+├── jobs/
+│   ├── monthly-job.ts          # Job mensal (stub)
+│   └── weekly-job.ts           # Job semanal (stub)
+└── __tests__/
+    ├── scheduled-handler.test.ts
+    └── date-utils.test.ts
+```
+
+### Testando Localmente
+
+#### Método 1: NPM Scripts (Recomendado) ⚡
+
+```bash
+npm run invoke:monthly   # Testa job mensal
+npm run invoke:weekly    # Testa job semanal
+```
+
+#### Método 2: Serverless Framework
+
+```bash
+# Com dados inline
+npx serverless invoke local -f scheduled-jobs --data '{"jobType":"monthly"}'
+npx serverless invoke local -f scheduled-jobs --data '{"jobType":"weekly"}'
+
+# Com arquivo de payload
+npx serverless invoke local -f scheduled-jobs --path test-payloads/monthly.json
+npx serverless invoke local -f scheduled-jobs --path test-payloads/weekly.json
+```
+
+#### Método 3: Script de Teste Completo
+
+```bash
+npx ts-node src/test-manual.ts
+```
+
+### Logs (AWS Powertools Logger)
+
+Exemplo de log quando o job semanal é pulado:
+
+```json
+{
+  "level": "INFO",
+  "message": "Skipping weekly job - today is the last day of the month",
+  "service": "scheduled-jobs-handler",
+  "jobType": "weekly",
+  "reason": "collision_avoidance",
+  "date": "2024-01-31T18:00:00.000Z"
+}
+```
+
+### Documentação Completa
+
+Consulte [SCHEDULER_README.md](./SCHEDULER_README.md) para:
+- Detalhes da arquitetura
+- Configuração dos schedules
+- Ajuste de horários e dias
+- Validação e troubleshooting
+- Próximos passos para implementação da lógica de negócio
+
+---
